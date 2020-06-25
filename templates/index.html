@@ -1,0 +1,48 @@
+<!------ Include the above in your HEAD tag ---------->
+
+<html>
+  <head>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="../static/style.css" type="text/css" rel="stylesheet" />
+    <link
+      href="http://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+      rel="stylesheet"
+      id="bootstrap-css"
+    />
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    
+    <script src="../static/backend.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h3 class="text-center">Messaging</h3>
+      <div class="messaging">
+          <div class="mesgs">
+            <div class="msg_history", id="msg_hist">
+              
+            </div>
+            <div class="type_msg">
+              <div class="input_msg_write">
+                <input
+                  type="text"
+                  class="write_msg"
+                  id='typed_text'
+                  placeholder="Type a message"
+                />
+                <button class="msg_send_btn" type="button", id='send', onclick="sendMsg()">
+                  <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </body>
+</html>

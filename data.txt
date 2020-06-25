@@ -1,0 +1,12 @@
+dataset = ["What is the weather today ?", "How is the weather today ?", "What's the weather today?",\
+           "How's the weather today", "weather today?", "weather now?", "Get me information of today's weather", \
+           "information about today's weather", "today's weather?",\
+
+           "What is the weather tomorrow ?", "How is the weather tomorrow ?", "What's the weather tomorrow?",\
+           "How's the weather tomorrow", "weather tomorrow?", "Get me information of tomorrow's weather", \
+           "information about tomorrow's weather", "tomorrow's weather?",\
+
+           "What's the time now?", "What is the time?", "What is the time now?", "Time please!", "Tell me what's the time", \
+           "Tell me what is the time", "What time is it now?", "what time is it?", "time?"]
+
+labels = [0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2]
