@@ -1,0 +1,42 @@
+{
+    "flight-info":{"responses":["A101", "B278", "C312", "D56"], "examples":[
+        "what flights are available from pittsburgh to baltimore on thursday morning",
+        "i need a flight tomorrow from columbus to minneapolis",
+        "show me the flights from pittsburgh to los angeles on thursday",
+        "all flights from boston to washington",
+        "show me the flights from dallas to san francisco",
+        "show me the flights from san diego to newark by way of houston",
+        "what is the cheapest flight from boston to bwi",
+        "all flights to baltimore after 6 pm",
+        "all flights from denver to pittsburgh leaving after 6 pm and before 7 pm",
+        "i need information on flights for tuesday leaving baltimore for dallas dallas to boston and boston ...",
+        "please give me the flights from boston to pittsburgh on thursday of next week",
+        "i would like to fly from denver to pittsburgh on united airlines",
+        "show me the flights from san diego to newark",
+        "show me the flights from san diego to newark"
+    ]},
+
+    "flight-time-info":{"responses":["6.00 hrs", "12.00 hrs", "8.30 hrs", "11.45 hrs"], "examples":[
+        "what is the arrival time in san francisco for the 755 am flight leaving washington",
+        "what are the times that you have planes leaving from san francisco going to pittsburgh on july seve...",
+        "on united airlines give me the flight times from boston to dallas",
+        "what are the schedule of flights from boston to san francisco for august first",
+        "what is the flight schedule of the f28 from pittsburgh to baltimore",
+        "show me times for flights from san francisco to atlanta",
+        "i would like the time of all flights from san francisco to pittsburgh on sunday"
+    ]},
+
+    "airfare-info":{"responses":["INR 12756", "INR 200980", "INR 3450", "INR 344589"], "examples":[
+        "cheapest airfare from tacoma to orlando",
+        "round trip fares from pittsburgh to philadelphia under 1000 dollars",
+        "show me the first class fares from boston to denver",
+        "i'd like to have some information on a ticket from denver to pittsburgh and atlanta",
+        "show me the cheapest round trip fare from baltimore to dallas",
+        "fares and flights from pittsburgh to philadelphia",
+        "what is the cost of a round trip flight from pittsburgh to atlanta beginning on april twenty fifth ...",
+        "show me all the night fares between philadelphia and san francisco",
+        "what are the coach fares from charlotte to la wednesday night",
+        "what is the cost of a first class ticket from baltimore to dallas",
+        "what is the economy thrift fare from boston to washington"
+    ]}
+}

@@ -1,48 +1,842 @@
-<!------ Include the above in your HEAD tag ---------->
+<!DOCTYPE html>
+<html> 
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="../static/modernizr-custom.js"></script>
+        <script src="../static/jquery.min.js"></script>
+        <script src="../static/babel.min.js"></script>
+        <script crossorigin src="../static/react.development.js"></script>
+        <script crossorigin src="../static/react-dom.development.js"></script>
 
-<html>
-  <head>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css"
-      type="text/css"
-      rel="stylesheet"
-    />
-    <link href="../static/style.css" type="text/css" rel="stylesheet" />
-    <link
-      href="http://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
-      rel="stylesheet"
-      id="bootstrap-css"
-    />
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-    
-    <script src="../static/backend.js"></script>
-  </head>
-  <body>
-    <div class="container">
-      <h3 class="text-center">Messaging</h3>
-      <div class="messaging">
-          <div class="mesgs">
-            <div class="msg_history", id="msg_hist">
-              
-            </div>
-            <div class="type_msg">
-              <div class="input_msg_write">
-                <input
-                  type="text"
-                  class="write_msg"
-                  id='typed_text'
-                  placeholder="Type a message"
-                />
-                <button class="msg_send_btn" type="button", id='send', onclick="sendMsg()">
-                  <i class="fa fa-paper-plane-o" aria-hidden="true"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <link rel="stylesheet" href="">
 
-      </div>
-    </div>
-  </body>
+        <style>
+            @font-face {
+                font-family: GoodTimes;
+                src: url(../static/good-times.ttf);
+            }
+
+            /* Safari */
+            @-webkit-keyframes spin {
+                0% { -webkit-transform: rotate(0deg); }
+                100% { -webkit-transform: rotate(360deg); }
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <div id="root"></div>
+
+        <script type="text/babel">
+
+            var media, w, intentString;
+            var dataset = {};
+            var elem = [];
+            var elemCount=0; 
+            
+
+            function addResponsiveStyle(selectorString, styleDict){
+                elem.push({selector:selectorString, style:styleDict});
+                elemCount = elemCount+1;
+            }
+
+
+            function applyResponsiveStyle(){
+                w = $(window).width();
+
+                /*  xs:0, sm:1, md:2, lg:3, xl:4, xxl:5 */ 
+                switch(true){
+                    case w>=200 && w<400:   for(var i=0; i<elemCount; i++){ $(elem[i].selector).css(elem[i].style[0]); } break;
+                    case w>=400 && w<600:   for(var i=0; i<elemCount; i++){ $(elem[i].selector).css(elem[i].style[1]); } break;
+                    case w>=600 && w<768:   for(var i=0; i<elemCount; i++){ $(elem[i].selector).css(elem[i].style[2]); } break;
+                    case w>=768 && w<992:   for(var i=0; i<elemCount; i++){ $(elem[i].selector).css(elem[i].style[3]); } break;
+                    case w>=992 && w<1200:  for(var i=0; i<elemCount; i++){ $(elem[i].selector).css(elem[i].style[4]); } break;
+                    case w>=1200:           for(var i=0; i<elemCount; i++){ $(elem[i].selector).css(elem[i].style[5]); } break;
+                }
+            }
+
+
+            function below(selector){var position= $(selector).offset().top + $(selector).height(); return position+"px"}
+            function above(selector){var position= $(selector).offset().bottom + $(selector).height(); return position+"px"}
+            function toLeft(selector){var position= $(selector).offset().left + $(selector).width(); return position+"px"}
+            function toRight(selector){var position= $(selector).offset().right + $(selector).width(); return position+"px"}
+
+            function sendMsg(){
+                var msg = $("#type-msg").val().trim();
+                if (msg.length>0){
+                    $("#send-msg-btn").attr("disabled", true);
+                    $("#send-msg-btn").css("opacity", 0.5);
+
+                    var userMsgStyling = "width:auto; max-width:50%; margin-right:1vw; margin-left:auto; margin-top:1vw; height:auto;\
+                                        color:white; background-color:#756FC9; font-family:'Helvetica Neue'; font-weight:350;\
+                                        padding: 5px 10px 5px 10px; border-radius:8px;"
+
+                    var botMsgStyling = "width:auto; max-width:50%; margin-left:1vw; margin-right:auto; margin-top:1vw; height:auto;\
+                                        color:black; background-color:#EAEBEF; font-family:'Helvetica Neue'; font-weight:350;\
+                                        padding: 5px 10px 5px 10px; border-radius:8px;"
+                    var sendMsgElem = '\
+                        <span class="user-msg" style="'+userMsgStyling+'">'+msg+'</span>\
+                    '
+                    
+                    $("#msgs-container").append(sendMsgElem);
+                    $("#type-msg").val("");
+
+                    var URL = "localhost:8000";
+                    var URL_PATH = "http://"+URL+"/predict";
+                    $.ajax({
+                        type: 'POST',
+                        url: URL_PATH,
+                        contentType: 'application/json',
+                        data: JSON.stringify({"text":msg}),
+                        success: function(data) {
+                            $("#send-msg-btn").attr("disabled", false);
+                            $("#send-msg-btn").css("opacity", 1);
+
+                            var botMsgElem = '\
+                                <span class="bot-msg" style="'+botMsgStyling+'">'+data.response+'</span>\
+                            '
+                            $("#msgs-container").append(botMsgElem);
+                        },
+                        error: function(error){
+                            console.log(error);
+                        }
+                    });
+                }
+
+                
+            }
+            
+            function addExample(e){
+                var intent = $("#select-intent-dropdown option:selected").text();
+                var example = $("#type-example").val().trim();
+
+                if(example.length>0){
+                    
+                    var node = '\
+                    <div class='+intent+'-exampleSentenceContainer style="width:100%; height:auto; display:flex; align-items:center; margin-bottom:1vw;">\
+                        <span style="font-size:2vw;">'+example+'</span>\
+                        <img class="example-delete-btn" src="../static/delete-btn.png" style="width:auto; height:2vw; margin-right:0; margin-left:auto;"/>\
+                    </div>\
+                    ';
+                    $("#"+intent+"-intentexamplescontainer").append(node);
+                    $("#type-example").val("");
+                    dataset[intent]["examples"].push(example)
+                }
+            }
+
+            function addIntent(e){
+                var intent = $("#type-intent").val().trim();
+                var reWhiteSpace = new RegExp("\\s+");
+
+                if (intent.length>40) alert("Intent exceeded 40 characters");
+                if (intent.length>0){
+                    if(reWhiteSpace.test(intent)){alert("Spaces are not allowed in intents!")}
+                    else{
+                        if (dataset.hasOwnProperty(intent)) {alert("Intent exists already!")}
+                        else{
+                            intentString = intent;
+                            var elem = '\
+                                <div class="intent-info-container" id="'+intent+'-container" style="width:80%; height:auto; margin-left:10%; margin-top:1vw; border-bottom: 2px solid #E8E2E2;">\
+                                        <div class="intent-container" style="width:100%; height:50%; display:flex; align-items:center;">\
+                                            <span class="intent-text" style="font-size:180%;">'+intentString+'</span>\
+                                            <img class="intent-delete-btn" id="'+intent+'-deleteIntentBtn" src="../static/delete-btn.png" style="width:auto; height:auto; margin-right:0; margin-left:auto;"/>\
+                                        </div>\
+                                        <div class="intent-replies-container" id="'+intent+'-replycontainer" style="margin-left:3%; margin-top:0.7vw; display:flex; flex-direction:column;">\
+                                            <button class="add-reply-btn" id="'+intent+'-replybtn" style="width:10vw; color:white; font-size:90%; background-color:#BF708D; outline:none; border:none; user-select:none; margin-top:0.8vw; margin-bottom:1.5vw; border-radius:1vw;">Add Reply</button>\
+                                        </div>\
+                                </div>\
+                            '
+                            $("#intents-outer-container").append(elem)
+                            intentString = "";
+                            $("#type-intent").val("");
+                            dataset[intent] = {"responses":[], "examples":[]};
+                            document.getElementById("intents-outer-container").scrollTop = document.getElementById(intent+"-container").offsetTop;
+                        }
+                    }
+                    
+                }
+            }
+
+            class HeadingBar extends React.Component{
+                componentDidMount(){
+                    addResponsiveStyle("#heading-bar-container", this.responsiveContainerStyle);
+                    addResponsiveStyle("#heading-text", this.responsiveHeadingTextStyle);
+                    applyResponsiveStyle();
+                }
+
+                render() {
+                    return (
+                        <div id="heading-bar-container" style={this.containerStyle}>
+                            <img src="../static/logo.png" style={this.imgStyle}/>
+                            <span style={this.headingTextStyle} id="heading-text">C H A T B O T</span>
+                        </div>
+                    )
+                }
+
+                containerStyle = {
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContents: "flex-start"
+                };
+
+                responsiveContainerStyle = [
+                    {"height": "14vw"},
+                    {"height": "14vw"},
+                    {"height": "12vw"},
+                    {"height": "10vw"},
+                    {"height": "8vw"},
+                    {"height": "8vw"}
+                ];
+
+                imgStyle = {
+                    height: "80%",
+                    width: "auto",
+                    marginLeft: "2vw"
+                };
+
+                headingTextStyle = {
+                    fontFamily: "GoodTimes",
+                    marginTop: "auto",
+                    marginBottom: "auto",
+                    marginLeft: "3vw"
+                };
+
+                responsiveHeadingTextStyle = [
+                    {"font-size":"3vw"},
+                    {"font-size":"3vw"},
+                    {"font-size":"3vw"},
+                    {"font-size":"3vw"},
+                    {"font-size":"2vw"},
+                    {"font-size":"2vw"}
+                ];
+            }
+
+            class AddIntentsBar extends React.Component{
+
+                componentDidMount(){
+                    addResponsiveStyle("#add-intent-bar-container", this.responsiveIntentBarContainerStyle);
+                    addResponsiveStyle("#character-limit-note", this.responsiveCharacterLimitNoteStyle);
+
+                }
+
+                intentBarContainerStyle = {
+                    width: "80vw",
+                    height: "10vw",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    marginLeft: "10vw",
+                    marginRight: "10vw",
+                    marginTop: "3vw"
+                }
+
+                typeIntentStyle = {
+                    width: "86%",
+                    height: "50%",
+                    backgroundColor: "#E8E8E8",
+                    outline: "none",
+                    border: "none",
+                    padding: "0 0 0 3vw",
+                    fontSize: "1.5vw"
+                }
+
+                responsiveIntentBarContainerStyle = [
+                    {"height":"12vw"},
+                    {"height":"12vw"},
+                    {"height":"12vw"},
+                    {"height":"10vw"},
+                    {"height":"10vw"},
+                    {"height":"10vw"}
+                ]
+
+                addBtnStyle = {
+                    width: "10%",
+                    height: "50%",
+                    backgroundColor: "#5C5E62",
+                    color: "white",
+                    outline: "none",
+                    border: "none",
+                    padding: "0",
+                    fontSize: "1.5vw"
+                }
+
+                characterLimitNoteStyle = {
+                    width: "100%",
+                    height:"30%",
+                    textAlign: "center",
+                    fontFamily: "Helvetica Neue"
+                }
+
+                responsiveCharacterLimitNoteStyle = [
+                    {"font-size":"2vw"},
+                    {"font-size":"2vw"},
+                    {"font-size":"2vw"},
+                    {"font-size":"1.5vw"},
+                    {"font-size":"1.5vw"},
+                    {"font-size":"1.5vw"}
+                ]
+
+                render() { 
+                    return (
+                        <div id="add-intent-bar-container" style={this.intentBarContainerStyle}>
+                            <input id="type-intent" style={this.typeIntentStyle} placeholder="Add intents..." autoComplete="off"></input>
+                            <button id="add-intent-btn" style={this.addBtnStyle}>ADD</button>
+                            <div id="character-limit-note" style={this.characterLimitNoteStyle}>Intents should not exceed 40 characters...</div>
+                        </div>
+                    )
+                }
+            }
+
+            class AddIntentsPage extends React.Component{
+
+                intentsOuterContainerStyle = {
+                    width: "80%",
+                    maxHeight: 0.5*$(window).height()+"px",
+                    marginLeft: "10%",
+                    overflow: "auto",
+                    height: "auto"
+                }
+
+                proceedBtnStyle = {
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                    marginTop: "2vw",
+                    width: "10vw",
+                    height: "3vw",
+                    fontSize: "1.5vw",
+                    color: "white",
+                    backgroundColor: "#7A8AA1",
+                    outline: "none",
+                    border: "none",
+                    userSelect: "none",
+                    borderRadius: "1vw"
+                }
+
+                pageStyle = {display:"flex", flexDirection:"column"}
+
+                orStyle = {width:"80%", marginLeft:"10%", textAlign:"center", fontSize: "1.5vw", fontFamily:"Helvetica Neue",
+                           marginBottom:"2vw" }
+
+                uploadFileStyle = {width:"auto", marginLeft:"auto", marginRight:"auto", textAlign:"center"}
+
+                render(){
+                    return(
+                        <div>
+                            <HeadingBar />
+                            <div id="add-intents-page" style={this.pageStyle}>
+                                <AddIntentsBar />
+                                <div id="intents-outer-container" style={this.intentsOuterContainerStyle}></div>
+                                <span style={this.orStyle}>OR</span>
+                                <input type="file" id="dataset-file" name="dataset" style={this.uploadFileStyle} />
+                                <button id="proceed-btn" style={this.proceedBtnStyle}>PROCEED</button>
+                            </div>
+                        </div>
+                    )
+                }
+            }
+
+            class AddExamplesBar extends React.Component{
+
+            exampleBarContainerStyle = {
+                width: "80vw",
+                height: "8vw",
+                display: "flex",
+                flexWrap: "wrap",
+                marginLeft: "10vw",
+                marginRight: "10vw",
+                marginTop: "3vw"
+            }
+
+            typeExampleStyle = {
+                width: "86%",
+                height: "50%",
+                backgroundColor: "#E8E8E8",
+                outline: "none",
+                border: "none",
+                padding: "0 0 0 3vw",
+                fontSize: "1.5vw"
+            }
+
+            responsiveExampleBarContainerStyle = [
+                {"height":"12vw"},
+                {"height":"12vw"},
+                {"height":"12vw"},
+                {"height":"10vw"},
+                {"height":"10vw"},
+                {"height":"10vw"}
+            ]
+
+            addBtnStyle = {
+                width: "10%",
+                height: "50%",
+                backgroundColor: "#5C5E62",
+                color: "white",
+                outline: "none",
+                border: "none",
+                padding: "0",
+                fontSize: "1.5vw"
+            }
+
+
+            render() { 
+                return (
+                    <div id="add-example-bar-container" style={this.exampleBarContainerStyle}>
+                        <input id="type-example" style={this.typeExampleStyle} placeholder="Add examples..." autoComplete="off"></input>
+                        <button id="add-example-btn" style={this.addBtnStyle}>ADD</button>
+                    </div>
+                )
+            }
+            }
+
+            class AddExamplesPage extends React.Component{
+                componentDidMount(){
+                    for(var key in dataset){
+                        var elem = "<option  value='"+key+"'>"+key+"</option>";
+                        $("#select-intent-dropdown").append(elem);
+                        var node = '\
+                                    <div class="example-info-container" style="width:80%; height:auto; margin-left:10%; margin-top:1vw; border-bottom: 2px solid #E8E2E2;">\
+                                            <div class="example-container" style="width:100%; height:50%; display:flex; align-items:center;">\
+                                                <span class="example-text" style="font-size:3vw;">'+key+'</span>\
+                                            </div>\
+                                            <div class="example-intent-container" id="'+key+'-intentexamplescontainer" style="height:auto; margin-left:3%; margin-top:0.7vw; display:flex; flex-direction:column;"></div>\
+                                    </div>\
+                                '
+                        $("#examples-outer-container").append(node);
+                    }
+                }
+
+                render(){
+                    
+                    return(
+                        <div>
+                            <HeadingBar />
+                            <div id="add-examples-page" style={this.pageStyle}>
+                                <span style={this.trainExHeadingStyle}>TRAINING EXAMPLES</span>
+                                <span style={this.selectIntentLabelStyle}>Intent</span>
+                                <select style={this.selectIntentDropDownStyle} id="select-intent-dropdown">
+                                </select>
+                                <AddExamplesBar />
+                                <div id="examples-outer-container" style={this.examplesOuterContainerStyle}>
+                                    
+                                </div>
+                                <div style={this.btnContainerStyle}>
+                                    <button id="back-btn" style={this.backBtnStyle}>BACK</button>
+                                    <button id="train-btn" style={this.trainBtnStyle}>TRAIN</button>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    )
+                }
+
+                btnContainerStyle = {display:"flex"}
+
+                pageStyle = {display:"flex", flexDirection:"column"}
+
+                examplesOuterContainerStyle = {
+                    width: "80%",
+                    maxHeight: 0.5*$(window).height()+"px",
+                    marginLeft: "10%",
+                    overflow: "auto",
+                    height: "auto"
+                }
+
+                trainBtnStyle = {
+                    marginLeft: "0.5vw",
+                    marginRight: "auto",
+                    marginTop: "2vw",
+                    width: "10vw",
+                    height: "3vw",
+                    fontSize: "1.5vw",
+                    color: "white",
+                    backgroundColor: "#7A8AA1",
+                    outline: "none",
+                    border: "none",
+                    userSelect: "none",
+                    borderRadius: "1vw"
+                }
+
+                backBtnStyle = {
+                    marginLeft: "auto",
+                    marginRight: "0.5vw",
+                    marginTop: "2vw",
+                    width: "10vw",
+                    height: "3vw",
+                    fontSize: "1.5vw",
+                    color: "white",
+                    backgroundColor: "#7A8AA1",
+                    outline: "none",
+                    border: "none",
+                    userSelect: "none",
+                    borderRadius: "1vw"
+                }
+
+                trainExHeadingStyle = {
+                    fontFamily: "Helvetica Neue",
+                    textAlign: "center",
+                    width: "100%",
+                    height: "auto",
+                    fontSize: "2vw",
+                    marginTop: "2vw"
+                }
+
+                selectIntentLabelStyle= {
+                    fontFamily: "Helvetica Neue",
+                    textAlign: "center",
+                    width: "100%",
+                    height: "auto",
+                    fontSize: "1.5vw",
+                    marginTop: "1vw"
+                }
+
+                selectIntentDropDownStyle = {
+                    width: "30vw",
+                    height: "auto",
+                    fontSize: "1.5vw",
+                    fontFamily:"Helvetica Neue",
+                    marginLeft:"auto",
+                    marginRight: "auto",
+                    marginTop: "1vw"
+                }
+                
+            }
+
+            class LaunchBotPage extends React.Component{
+                componentDidMount(){
+                    $("#launch-bot-btn"). attr("disabled", true);
+                    $("#launch-bot-btn"). css("opacity", 0.5);
+                }
+
+                launchBotContainerStyle = {
+                    width: "80%",
+                    height: "auto",
+                    marginLeft: "10%",
+                    marginTop: "10vw",
+                    display: "flex",
+                    flexDirection: "column"
+                }
+
+                loaderStyle = {
+                    border: "1vw solid #f3f3f3",
+                    borderRadius: "50%",
+                    borderTop: "1vw solid #28292b",
+                    width: "5vw",
+                    height: "5vw",
+                    marginLeft:"auto",
+                    marginRight:"auto",
+                    animation: "spin 2s linear infinite"
+                }
+
+                trainingStatusLabelStyle = {
+                    textAlign: "center",
+                    width: "100%",
+                    fontSize:"1.5vw",
+                    marginLeft: "auto",
+                    marginRight:"auto",
+                    marginTop: "3vw"
+                }
+
+                launchBotBtnStyle = {
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                    marginTop: "2vw",
+                    width: "15vw",
+                    height: "3vw",
+                    fontSize: "1.5vw",
+                    color: "white",
+                    backgroundColor: "#2C6BC6",
+                    outline: "none",
+                    border: "none",
+                    userSelect: "none",
+                    borderRadius: "0.7vw"
+                }
+
+                render(){
+                    return(
+                        <div>
+                            <HeadingBar />
+                            <div id="launch-bot-container" style={this.launchBotContainerStyle}>
+                                <div className="loader" style={this.loaderStyle}></div>
+                                <span id="training-status" style={this.trainingStatusLabelStyle}>Training...</span>
+                                <button id="launch-bot-btn" style={this.launchBotBtnStyle}>LAUNCH BOT</button>
+                            </div>
+                        </div>
+                    )
+                }
+            }
+
+            class ChatBoxPage extends React.Component{
+                msgsContainerStyle = {
+                    border: "5px solid #EAEBEF",
+                    width: "60%",
+                    marginLeft: "20%",
+                    marginTop: "4vw",
+                    height: "30vw",
+                    display:"flex",
+                    flexDirection: "column",
+                    overflow:"auto"
+                }
+
+                sendMsgContainer = {
+                    border: "5px solid #EAEBEF",
+                    backgroundColor: "#EAEBEF",
+                    width: "60%",
+                    marginLeft: "20%",
+                    height:"5vw"
+                }
+
+                typeMsgStyle = {
+                    width: "70%",
+                    marginLeft: "10%",
+                    marginTop: "1vw",
+                    height: "50%",
+                    backgroundColor: "white",
+                    outline: "none",
+                    border: "none",
+                    padding: "0 0 0 3vw",
+                    fontSize: "1.5vw"
+                }
+
+                sendBtnStyle = {
+                    width: "10%",
+                    height: "50%",
+                    marginTop: "1vw",
+                    backgroundColor: "#5C5E62",
+                    color: "white",
+                    outline: "none",
+                    border: "none",
+                    padding: "0",
+                    fontSize: "1.5vw",
+                    fontFamily: "Helvetica Neue",
+                    fontWeight: "250"
+                }
+
+                render(){
+                    return(
+                        <div>
+                            <HeadingBar />
+                            <div id="msgs-container" style={this.msgsContainerStyle}>
+                            </div>
+                            <div id="send-msg-container" style={this.sendMsgContainer}>
+                                <input id="type-msg" style={this.typeMsgStyle} placeholder="Type your message here..." autoComplete="off"></input>
+                                <button id="send-msg-btn" style={this.sendBtnStyle}>Send</button>
+                            </div>
+                        </div>
+                    )
+                }
+            }
+            
+            class App extends React.Component{
+
+                componentDidMount(){
+                    $(document).on("change", "#dataset-file", function(event){
+                        var reader = new FileReader();
+                        reader.onload = (event) => {
+                            dataset = JSON.parse(event.target.result);
+                        };
+                        reader.readAsText(event.target.files[0]);
+                    });
+
+                    $(document).on("click", "#proceed-btn", function(event){
+                        if(dataset.length==0) alert("Atleast 1 intent and its responses need to be added!")
+                        else{
+                            if ($('#dataset-file')[0].files.length === 0){
+                                var check=true;
+                                for(var key in dataset){
+                                    if(dataset[key]["responses"].length==0){check=false; break;}
+                                }
+                                if(check==false){alert("Every intent should have atleast one reply!")}
+                                else{
+                                    ReactDOM.unmountComponentAtNode(document.getElementById('app'));
+                                    ReactDOM.render(<AddExamplesPage />, document.getElementById("app"));
+                                }
+                            }
+                            else{
+                                try{
+                                    var check=true;
+                                    for(var key in dataset){
+                                        if(dataset[key]["examples"].length==0){check=false; break}
+                                    }
+                                    if (check){
+                                        ReactDOM.unmountComponentAtNode(document.getElementById('app'));
+                                        ReactDOM.render(<LaunchBotPage />, document.getElementById("app"));
+                                        var URL = "localhost:8000";
+                                        var URL_PATH = "http://"+URL+"/train";
+                                        $.ajax({
+                                            type: 'POST',
+                                            url: URL_PATH,
+                                            contentType: 'application/json',
+                                            data: JSON.stringify(dataset),
+                                            success: function(data) {
+                                                if(data.response=="successful")
+                                                {
+                                                    $(".loader").remove();
+                                                    $("#training-status").text("Training completed!");
+                                                    $("#launch-bot-btn"). attr("disabled", false);
+                                                    $("#launch-bot-btn"). css("opacity", 1);
+                                                }
+                                                else if(data.response=="failed"){
+                                                    $(".loader").remove();
+                                                    $("#training-status").text("Error during training");
+                                                }
+                                            },
+                                            error: function(error){
+                                                console.log(error);
+                                            }
+                                        });
+                                    }
+                                    else alert("Every intent should have atleast one example!")
+
+                                }
+                                catch(err){
+                                    alert("Error in the JSON file!")
+                                }
+                            }
+                            
+                        }
+                        
+                    });
+
+                    $(document).on("click", ".add-reply-btn", function(e){
+                        var id = e.target.id;
+                        var intent = id.split("-replybtn")[0];
+
+                        var reply = prompt("Enter reply for "+intent, "");
+                        if (reply != null) {
+                            dataset[intent]["responses"].push(reply);
+                            document.getElementById("intents-outer-container").scrollTop = document.getElementById(intent+"-replycontainer").offsetTop;
+                            $("#"+intent+"-replycontainer").prepend('<span style="font-family:Helvetica; margin-top:0.3vw;">'+reply+'</span>')
+                        }
+                    });
+
+                    $(document).on("click",".intent-delete-btn", function(e){
+                        var id = e.target.id;
+                        var intent = id.split("-deleteIntentBtn")[0];
+                        delete dataset[intent];
+                        $("#"+intent+"-container").remove();
+                    });
+
+                    $(document).on("click",".example-delete-btn", function(e){
+                        var exampleText = e.target.previousElementSibling.innerHTML;
+                        exampleText = exampleText.trim();
+                        e.target.parentElement.parentElement.removeChild(e.target.parentElement);
+
+                        var intent = e.target.parentElement.className.split("-exampleSentenceContainer")[0];
+
+                        var index = dataset[intent]["examples"].indexOf(exampleText);
+                        dataset[intent]["examples"].splice(index, 1);
+                        
+                    });
+
+                    $(document).on("click","#add-intent-btn", function(e){addIntent(e);});
+
+                    $(document).on("click","#add-example-btn", function(e){addExample(e);});
+
+                    $(document).on("click", "#back-btn", function(){
+                        ReactDOM.unmountComponentAtNode(document.getElementById('app'));
+                        ReactDOM.render(<AddIntentsPage />, document.getElementById("app"));
+                        dataset = {};
+                    });
+
+                    $(document).on("click", "#train-btn", function(){
+                        var check=true;
+
+                        for(var key in dataset){
+                            if(dataset[key]["examples"].length==0){check=false; break}
+                        }
+
+                        if (check){
+                            ReactDOM.unmountComponentAtNode(document.getElementById('app'));
+                            ReactDOM.render(<LaunchBotPage />, document.getElementById("app"));
+                            var URL = "localhost:8000";
+                            var URL_PATH = "http://"+URL+"/train";
+                            $.ajax({
+                                type: 'POST',
+                                url: URL_PATH,
+                                contentType: 'application/json',
+                                data: JSON.stringify(dataset),
+                                success: function(data) {
+                                    if(data.response=="successful")
+                                    {
+                                        $(".loader").remove();
+                                        $("#training-status").text("Training completed!");
+                                        $("#launch-bot-btn"). attr("disabled", false);
+                                        $("#launch-bot-btn"). css("opacity", 1);
+                                    }
+                                    else if(data.response=="failed"){
+                                        $(".loader").remove();
+                                        $("#training-status").text("Error during training");
+                                    }
+                                },
+                                error: function(error){
+                                    console.log(error);
+                                }
+                            });
+                        }
+                        else alert("Every intent should have atleast one example!")
+                        
+                    });
+                    
+                    $(document).on("click", "#launch-bot-btn", function(){
+                        ReactDOM.unmountComponentAtNode(document.getElementById('app'));
+                        ReactDOM.render(<ChatBoxPage />, document.getElementById("app"));
+                    })
+
+                    $(document).on("click", "#send-msg-btn", function(){
+                        sendMsg();
+                    })
+                }
+
+                appStyle = {
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContents: "flex-start",
+                    width: "100%",
+                    height: "100vw"
+                } 
+
+                render(){
+                    return(
+                        <div id="app" style={this.appStyle}>
+                            <AddIntentsPage />
+                        </div>
+                    )
+                }
+            }
+            
+            $(window).on('resize', function(){
+                applyResponsiveStyle();
+            });
+            
+            $(document).ready(function(){
+                $("body").on("keyup", function(e){
+                        var keycode = (e.keyCode ? e.keyCode : e.which);
+                        if(keycode == '13'){
+                            if($("#add-intent-btn").length)
+                                addIntent(e);
+                            else if ($("#add-example-btn").length)
+                                addExample(e);
+                            else if ($("#send-msg-btn").length)
+                                sendMsg();
+                        }
+                });
+            });
+            
+            ReactDOM.render(<App />, document.getElementById("root"))
+        </script>
+    </body>
 </html>
+
+<!-- 
+    
+ -->
